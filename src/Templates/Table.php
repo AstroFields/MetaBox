@@ -22,6 +22,15 @@ class Table implements TemplateInterface
 	}
 
 	/**
+	 * @TODO Build and return markup
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return $this->display();
+	}
+
+	/**
 	 * Render the Entities
 	 * @return string
 	 */
@@ -33,9 +42,7 @@ class Table implements TemplateInterface
 			<?php
 			foreach ( $this->entities as $entity )
 			{
-				$class = 0 === $this->entities->key() %2 ?
-					' class="alternate"'
-					: '';
+				$class = 0 === $this->entities->key() %2 ? ' class="alternate"' : '';
 				?>
 				<tr<?php echo $class; ?>>
 					<td>Foo</td>

@@ -38,6 +38,11 @@ class MetaBox implements \SplObserver, ContextAwareInterface, ViewAwareInterface
 	/** @type TemplateInterface */
 	private $template;
 
+	/**
+	 * @param string $label
+	 * @param string $context
+	 * @param string $priority
+	 */
 	public function __construct( $label, $context = 'advanced', $priority = 'default' )
 	{
 		$this->label      = $label;
