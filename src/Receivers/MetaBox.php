@@ -2,9 +2,9 @@
 
 namespace WCM\AstroFields\MetaBox\Receivers;
 
-use WCM\AstroFields\Core\Receivers\DataProviderInterface;
+use WCM\AstroFields\Core\Receivers\DataReceiverInterface;
 
-class MetaBox implements DataProviderInterface
+class MetaBox implements DataReceiverInterface
 {
 	/** @type array */
 	private $data;

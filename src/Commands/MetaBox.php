@@ -5,8 +5,8 @@ namespace WCM\AstroFields\MetaBox\Commands;
 use WCM\AstroFields\Core\Commands\ContextAwareInterface;
 use WCM\AstroFields\Core\Templates\TemplateInterface;
 use WCM\AstroFields\Core\Views\ViewableInterface;
+use WCM\AstroFields\Core\Mediators\Entity;
 
-use WCM\AstroFields\MetaBox\Commands\ViewAwareInterface;
 use WCM\AstroFields\MetaBox\Views\MetaBoxView as View;
 
 class MetaBox implements \SplObserver, ContextAwareInterface, ViewAwareInterface
@@ -57,13 +57,13 @@ class MetaBox implements \SplObserver, ContextAwareInterface, ViewAwareInterface
 
 	/**
 	 * Receive update from subject
-	 * @param \SplSubject $subject
+	 * @param \SplSubject|Entity $subject
 	 * @param Array       $data
 	 */
 	public function update( \SplSubject $subject, Array $data = null )
 	{
-		$this->key   = $data['key'];
-		$this->types = $data['type'];
+		$this->key   = $subject->getKey();
+		$this->types = $subject->getTypes();
 		# $post        = $data['args'][0];
 
 		$this->view->setData( $this->receiver );
