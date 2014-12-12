@@ -2,26 +2,20 @@
 
 namespace WCM\AstroFields\MetaBox\Commands;
 
-use WCM\AstroFields\Core\Commands\ContextAwareInterface;
-use WCM\AstroFields\Core\Templates\TemplateInterface;
-use WCM\AstroFields\Core\Views\ViewableInterface;
-use WCM\AstroFields\Core\Mediators\Entity;
+use WCM\AstroFields\Core\Commands;
+use WCM\AstroFields\Core\Mediators;
+use WCM\AstroFields\Core\Providers;
+use WCM\AstroFields\Core\Templates;
 
-use WCM\AstroFields\MetaBox\Views\MetaBoxView as View;
-
-class MetaBox implements \SplObserver, ContextAwareInterface, ViewAwareInterface
+class MetaBox extends Commands\AbstractCollectorCommand implements
+	Commands\ContextAwareInterface,
+	Commands\ViewAwareInterface
 {
 	/** @type string */
 	private $context = 'add_meta_boxes_{type}';
 
 	/** @type string */
-	private $key;
-
-	/** @type array $types */
-	private $types;
-
-	/** @type string */
-	private $label = 'Foo';
+	private $label = 'The Label';
 
 	/** @type string */
 	private $mb_context;
@@ -29,13 +23,10 @@ class MetaBox implements \SplObserver, ContextAwareInterface, ViewAwareInterface
 	/** @type string */
 	private $priority;
 
-	/** @type ViewableInterface */
-	private $view;
+	/** @type \WCM\AstroFields\MetaBox\Providers\MetaBoxDataProviderInterface|Providers\DataProviderInterface */
+	private $provider;
 
-	/** @type \SplPriorityQueue */
-	private $receiver;
-
-	/** @type TemplateInterface */
+	/** @type Templates\TemplateInterface */
 	private $template;
 
 	/**
@@ -43,46 +34,44 @@ class MetaBox implements \SplObserver, ContextAwareInterface, ViewAwareInterface
 	 * @param string $context
 	 * @param string $priority
 	 */
-	public function __construct( $label, $context = 'advanced', $priority = 'default' )
+	public function __construct(
+		$label,
+		$context = 'advanced',
+		$priority = 'default'
+		)
 	{
 		$this->label      = $label;
 		$this->mb_context = $context;
 		$this->priority   = $priority;
-
-		$this->view = new View;
-
-		$this->receiver = new \SplPriorityQueue;
-		$this->receiver->setExtractFlags( \SplPriorityQueue::EXTR_DATA );
 	}
 
 	/**
-	 * Receive update from subject
-	 * @param \SplSubject|Entity $subject
-	 * @param Array       $data
+	 * Attach the template and add the meta box
+	 * The `$callback` is the `display()` method from
+	 * a Template inheriting `Core\Templates\TemplateInterface`.
+	 * @param \WP_Post         $post
+	 * @param Mediators\Entity $entity
+	 * @param Array            $data
+	 * @return mixed | void
 	 */
-	public function update( \SplSubject $subject, Array $data = null )
+	public function update(
+		\WP_Post $post = null,
+		Mediators\Entity $entity = null,
+		Array $data = array()
+		)
 	{
-		$this->key   = $subject->getKey();
-		$this->types = $subject->getTypes();
-		# $post        = $data['args'][0];
+		$this->provider->setData(
+			$data
+			+ array( 'entities' => $this, )
+		);
+		$this->template->attach( $this->provider );
 
-		$this->view->setData( $this->receiver );
-		$this->view->setTemplate( $this->template );
-
-		$this->addMetaBox();
-	}
-
-	/**
-	 * Callback to add the meta box
-	 */
-	public function addMetaBox()
-	{
-		foreach ( $this->types as $type )
+		foreach ( $data['types'] as $type )
 		{
 			add_meta_box(
-				$this->key,
+				$data['key'],
 				$this->label,
-				array( $this->view, 'process' ),
+				array( $this->template, 'display' ),
 				$type,
 				$this->mb_context,
 				$this->priority
@@ -91,14 +80,18 @@ class MetaBox implements \SplObserver, ContextAwareInterface, ViewAwareInterface
 	}
 
 	/**
-	 * Attach a \SplSubject
-	 * @param \SplSubject $command
-	 * @param int         $priority
+	 * Attach an Entity
+	 * Hides the MetaBox from the "Custom Fields" MetaBox,
+	 * but avoids to add a(nother) sanitize Callback
+	 * @param Mediators\EntityInterface | Mediators\Entity $entity
+	 * @param int                                          $priority
 	 * @return $this|void
 	 */
-	public function attach( \SplSubject $command, $priority = 0 )
+	public function attach( Mediators\EntityInterface $entity, $priority )
 	{
-		$this->receiver->insert( $command, $priority );
+		register_meta( 'post', $entity->getKey(), null, '__return_false' );
+
+		$this->insert( $entity, $priority );
 
 		return $this;
 	}
@@ -115,15 +108,19 @@ class MetaBox implements \SplObserver, ContextAwareInterface, ViewAwareInterface
 		return $this->context;
 	}
 
-	public function setProvider( \SplPriorityQueue $receiver )
+	public function setProvider( Providers\DataProviderInterface $provider )
 	{
-		$this->receiver = $receiver;
+		if ( $this->template )
+			$this->template->attach( $provider );
+		$this->provider = $provider;
 
 		return $this;
 	}
 
-	public function setTemplate( TemplateInterface $template )
+	public function setTemplate( Templates\TemplateInterface $template )
 	{
+		if ( $this->provider )
+			$template->attach( $this->provider );
 		$this->template = $template;
 
 		return $template;

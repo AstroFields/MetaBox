@@ -1,10 +1,12 @@
 <?php
 
-namespace WCM\AstroFields\MetaBox\Receivers;
+namespace WCM\AstroFields\MetaBox\Providers;
 
-use WCM\AstroFields\Core\Receivers\DataReceiverInterface;
+use WCM\AstroFields\Core;
 
-class MetaBox implements DataReceiverInterface
+class MetaBoxDataProvider implements
+	Core\Providers\DataProviderInterface,
+	MetaBoxDataProviderInterface
 {
 	/** @type array */
 	private $data;
@@ -43,7 +45,7 @@ class MetaBox implements DataReceiverInterface
 
 	/**
 	 * Return the Stack that holds all assigned entities
-	 * @return \SplPriorityqueue
+	 * @return \SplPriorityQueue
 	 */
 	public function getEntities()
 	{

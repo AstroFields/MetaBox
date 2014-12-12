@@ -1,8 +1,8 @@
 <?php
 
-namespace WCM\AstroFields\MetaBox\Receivers;
+namespace WCM\AstroFields\MetaBox\Providers;
 
-interface MetaBoxInterface
+interface MetaBoxDataProviderInterface
 {
 	/**
 	 * Return the MetaBox handle
