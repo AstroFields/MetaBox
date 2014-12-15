@@ -15,12 +15,13 @@ class MetaBox extends AbstractFacade
 	/** @var Commands\MetaBox */
 	static private $box;
 
-	public function get( $name, Array $types )
+	public static function get( $name, Array $types = array() )
 	{
 		$box = Container::instance()->seek( $name );
+		var_dump( $box );
 	}
 
-	public function __callStatic( $method, $args )
+	public static function __callStatic( $method, $args )
 	{
 		$container = Container::instance();
 		var_dump( $method, $args );
